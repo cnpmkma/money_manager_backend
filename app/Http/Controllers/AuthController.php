@@ -23,7 +23,15 @@ class AuthController extends Controller
             'password'=> Hash::make($request->password),
         ]);
 
-        return response()->json($user, 201);
+        return response()->json([
+            'success' => true,
+            'message' => "Đăng ký thành công, vui lòng đăng nhập",
+            'user' => [
+                'id' => $user->id,
+                'username' => $user->username,
+                'email' => $user->email
+            ]
+        ], 201);
     }
 
     public function login(Request $request){
@@ -35,12 +43,25 @@ class AuthController extends Controller
         $user = User::where('username', $request->username)->first();
 
         if (!$user || !Hash::check($request->password, $user->password)) {
-            return response()->json(['message' => 'Invalid creadentials'], 401);
+            return response()->json([
+                'message' => 'Tên đăng nhập hoặc mật khẩu không chính xác',
+                'success' => false
+            ], 401);
         }
 
         $token = $user->createToken('auth_token')->plainTextToken;
 
-        return response()->json(['access_token'=> $token, 'token_type' => 'Bearer']);  
+        return response()->json([
+            'success' => true,
+            'message' => "Đăng nhập thành công",
+            'access_token'=> $token, 
+            'token_type' => 'Bearer',
+            'user' => [
+                'id' => $user->id,
+                'username' => $user->username,
+                'email' => $user->email
+            ]
+        ], 200);  
     }
 
     public function logout(Request $request){
