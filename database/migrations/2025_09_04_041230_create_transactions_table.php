@@ -15,7 +15,6 @@ return new class extends Migration
             $table->id();
             $table->decimal('amount', 15, 2);
             $table->string('note')->nullable();
-            $table->enum('type', ['thu', 'chi']);
             $table->foreignId('wallet_id')->constrained('wallets')->onDelete('cascade');
             $table->foreignId('category_id')->constrained('categories')->onDelete('cascade');
             $table->timestamps();

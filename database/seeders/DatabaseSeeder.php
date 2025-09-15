@@ -18,16 +18,19 @@ class DatabaseSeeder extends Seeder
     {
         // User::factory(10)->create();
         $categories = [
-            'Ăn uống',
-            'Gia đình',
-            'Giải trí',
-            'Giáo dục',
-            'Hóa đơn',
-            'Sức khỏe',
+            ['category_name' => 'Ăn uống', 'type' => 'chi'],
+            ['category_name' => 'Gia đình', 'type' => 'chi'],
+            ['category_name' => 'Giải trí', 'type' => 'chi'],
+            ['category_name' => 'Giáo dục', 'type' => 'chi'],
+            ['category_name' => 'Hóa đơn', 'type' => 'chi'],
+            ['category_name' => 'Sức khỏe', 'type' => 'chi'],
+            ['category_name' => 'Lương', 'type' => 'thu'],
+            ['category_name' => 'Tiền thưởng', 'type' => 'thu'],
+            ['category_name' => 'Khác', 'type' => 'chi'],
         ];
         
-        foreach ($categories as $name) {
-            Category::create(['category_name' => $name]);
+        foreach ($categories as $cat) {
+            Category::create($cat);
         }
         
         User::factory(5)->has(Wallet::factory(2)->has(Transaction::factory(5)))->create();

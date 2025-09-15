@@ -22,4 +22,8 @@ Route::middleware("auth:sanctum")->group(function () {
 
 Route::middleware("auth:sanctum")->group(function () {
     Route::get("/transactions", [TransactionController::class,"index"]);
+    Route::post("/transactions", [TransactionController::class,"store"]);
+    Route::get("/transactions/{transaction}", [TransactionController::class,"show"]);
+    Route::patch("/transactions/{transaction}", [TransactionController::class,"update"]);
+    Route::delete("/transactions/{transaction}", [TransactionController::class,"destroy"]);
 });

@@ -21,7 +21,6 @@ class TransactionFactory extends Factory
         return [
             'amount' =>$this->faker->randomFloat(),
             'note' => $this->faker->sentence(),
-            'type' => $this->faker->randomElement(['thu', 'chi']),
             'wallet_id' => Wallet::factory(),
             'category_id' => Category::pluck('id')->random()
         ];
