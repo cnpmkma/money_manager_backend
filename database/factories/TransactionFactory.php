@@ -22,7 +22,8 @@ class TransactionFactory extends Factory
             'amount' =>$this->faker->randomFloat(),
             'note' => $this->faker->sentence(),
             'wallet_id' => Wallet::factory(),
-            'category_id' => Category::pluck('id')->random()
+            'category_id' => Category::pluck('id')->random(),
+            'transaction_date' => $this->faker->dateTimeBetween('-1 month', 'now'),
         ];
     }
 }

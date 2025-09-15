@@ -14,12 +14,30 @@ class TransactionController extends Controller
      * Display a listing of the resource.
      */
     public function index(Request $request)
-    {
-        $wallet_ids = $request->user()->wallets()->pluck('id');
-        $transaction = Transaction::with('category')->whereIn("wallet_id", $wallet_ids)->orderBy("created_at", "desc")->get();
+{
+    $wallet_ids = $request->user()->wallets()->pluck('id');
 
-        return response()->json($transaction);
+    // Nếu có wallet_id query param, chỉ lấy transactions của ví đó
+    if ($request->has('wallet_id')) {
+        $walletId = $request->query('wallet_id');
+        // kiểm tra xem wallet đó có thuộc user không
+        if (!$wallet_ids->contains($walletId)) {
+            return response()->json(['error' => 'Wallet không hợp lệ'], 403);
+        }
+        $transactions = Transaction::with('category')
+            ->where('wallet_id', $walletId)
+            ->orderBy('created_at', 'desc')
+            ->get();
+    } else {
+        $transactions = Transaction::with('category')
+            ->whereIn('wallet_id', $wallet_ids)
+            ->orderBy('created_at', 'desc')
+            ->get();
     }
+
+    return response()->json($transactions);
+}
+
 
     /**
      * Store a newly created resource in storage.
@@ -32,6 +50,7 @@ class TransactionController extends Controller
                 'note' => ['nullable', 'string'],
                 'wallet_id' => ['required', 'exists:wallets,id'],
                 'category_id' => ['required', 'exists:categories,id'],
+                'transaction_date' => ['required', 'date']
             ]);
         } catch (ValidationException $e) {
             return response()->json(['errors' => $e->errors()], 422);
@@ -74,6 +93,7 @@ class TransactionController extends Controller
                 'note' => ['nullable', 'string'],
                 'wallet_id' => ['required', 'exists:wallets,id'],
                 'category_id' => ['required', 'exists:categories,id'],
+                'transaction_date' => ['required', 'date']
             ]);
         } catch (ValidationException $e) {
             return response()->json(['errors' => $e->errors()], 422);
