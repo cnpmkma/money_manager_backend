@@ -28,12 +28,13 @@ class WalletController extends Controller
             $request->validate([
                 'wallet_name' => ['required','string','max:255'],
                 'balance' => ['required','numeric','min:0'],
+                'skin_index' => ['nullable','integer','min:1','max:12']
             ]);
         } catch (ValidationException $e) {
             return response()->json(['errors' => $e->errors()], 422);
         }
 
-        $wallet = $request->user()->wallets()->create($request->only('wallet_name', 'balance'));
+        $wallet = $request->user()->wallets()->create($request->only('wallet_name', 'balance', 'skin_index'));
 
         return response()->json($wallet, 201);
     }
@@ -60,15 +61,15 @@ class WalletController extends Controller
         }
 
         try {
-            $request->validate([
+           $request->validate([
                 'wallet_name' => ['required','string','max:255'],
-                'balance' => ['required','numeric','min:0'],
+                'skin_index' => ['nullable','integer','min:1','max:12'],
             ]);
         } catch (ValidationException $e) {
             return response()->json(['errors' => $e->errors()], 422);
         }
 
-        $wallet->update($request->only('wallet_name', 'balance'));
+        $wallet->update($request->only('wallet_name', 'skin_index'));
 
         return response()->json($wallet);
     }

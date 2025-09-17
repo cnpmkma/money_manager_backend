@@ -9,7 +9,7 @@ class Wallet extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['wallet_name', 'balance'];
+    protected $fillable = ['wallet_name', 'balance' ,'skin_index'];
 
     public function user() {
         return $this->belongsTo(User::class);

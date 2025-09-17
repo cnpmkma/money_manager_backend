@@ -50,4 +50,9 @@ class User extends Authenticatable
     public function wallets() {
         return $this->hasMany(Wallet::class);
     }
+
+    public function budgets()
+    {
+        return $this->hasMany(Budget::class);
+    }
 }

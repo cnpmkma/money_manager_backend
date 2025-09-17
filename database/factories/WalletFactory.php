@@ -19,7 +19,8 @@ class WalletFactory extends Factory
     {
         return [
             'wallet_name' => $this->faker->word() . ' Wallet',
-            'balance' => $this->faker->randomFloat(),
+            'balance' => $this->faker->randomFloat(2,0, 1000000),
+            'skin_index' => $this->faker->numberBetween(1, 12),
             'user_id' => User::factory()
         ];
     }

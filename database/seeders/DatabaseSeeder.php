@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Budget;
 use App\Models\Category;
 use App\Models\Transaction;
 use App\Models\User;
@@ -34,5 +35,19 @@ class DatabaseSeeder extends Seeder
         }
         
         User::factory(5)->has(Wallet::factory(2)->has(Transaction::factory(5)))->create();
+
+        $categories = Category::all();
+        $users = User::all();
+
+        foreach ($users as $user) {
+            foreach ($categories as $category) {
+                // Tạo budget ngẫu nhiên từ 50 -> 500
+                Budget::create([
+                    'user_id' => $user->id,
+                    'category_id' => $category->id,
+                    'max_amount' => rand(50, 500),
+                ]);
+            }
+        }
     }
 }

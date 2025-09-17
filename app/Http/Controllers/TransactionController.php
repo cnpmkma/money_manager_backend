@@ -7,6 +7,7 @@ use App\Models\Transaction;
 use App\Models\Wallet;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\DB;
 
 class TransactionController extends Controller
 {
@@ -15,20 +16,24 @@ class TransactionController extends Controller
      */
     public function index(Request $request)
 {
+    // Lấy danh sách ID của các ví thuộc người dùng
     $wallet_ids = $request->user()->wallets()->pluck('id');
 
-    // Nếu có wallet_id query param, chỉ lấy transactions của ví đó
     if ($request->has('wallet_id')) {
         $walletId = $request->query('wallet_id');
-        // kiểm tra xem wallet đó có thuộc user không
+
+        // Kiểm tra ví có hợp lệ không
         if (!$wallet_ids->contains($walletId)) {
             return response()->json(['error' => 'Wallet không hợp lệ'], 403);
         }
+
+        // Lấy transactions cho ví cụ thể
         $transactions = Transaction::with('category')
             ->where('wallet_id', $walletId)
             ->orderBy('created_at', 'desc')
             ->get();
     } else {
+        // Lấy tất cả transactions của người dùng
         $transactions = Transaction::with('category')
             ->whereIn('wallet_id', $wallet_ids)
             ->orderBy('created_at', 'desc')
@@ -56,14 +61,26 @@ class TransactionController extends Controller
             return response()->json(['errors' => $e->errors()], 422);
         }
 
-        // check quyền sở hữu ví
-        if (! $request->user()->wallets()->where('id', $validated['wallet_id'])->exists()) {
+        $wallet = $request->user()->wallets()->find($validated['wallet_id']);
+        if (!$wallet) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
-        $transaction = Transaction::create($validated);
+        DB::transaction(function() use ($validated, $wallet, &$transaction) {
+            // Tạo transaction
+            $transaction = Transaction::create($validated);
 
-        return response()->json($transaction->load('category'), 201);
+            // Cập nhật số dư ví
+            $category = $transaction->category; // category có trường 'type' = 'thu' | 'chi'
+            if ($category->type === 'chi') {
+                $wallet->balance -= $transaction->amount;
+            } else {
+                $wallet->balance += $transaction->amount;
+            }
+            $wallet->save();
+        });
+
+        return response()->json(Transaction::with('category')->find($transaction->id), 201);
     }
 
     /**
@@ -99,12 +116,32 @@ class TransactionController extends Controller
             return response()->json(['errors' => $e->errors()], 422);
         }
 
-        // check ví có thuộc user không
-        if (! $request->user()->wallets()->where('id', $validated['wallet_id'])->exists()) {
+        $newWallet = $request->user()->wallets()->find($validated['wallet_id']);
+        if (!$newWallet) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
-        $transaction->update($validated);
+        DB::transaction(function() use ($transaction, $validated, $newWallet) {
+            $oldWallet = $transaction->wallet;
+            $oldAmount = $transaction->amount;
+            $oldType = $transaction->category->type;
+
+            // Điều chỉnh số dư ví cũ
+            if ($oldType === 'chi') $oldWallet->balance += $oldAmount;
+            else $oldWallet->balance -= $oldAmount;
+            $oldWallet->save();
+
+            // Update transaction
+            $transaction->update($validated);
+
+            $newType = $transaction->category->type;
+            $newAmount = $transaction->amount;
+
+            // Điều chỉnh số dư ví mới
+            if ($newType === 'chi') $newWallet->balance -= $newAmount;
+            else $newWallet->balance += $newAmount;
+            $newWallet->save();
+        });
 
         return response()->json($transaction->load('category'));
     }
@@ -118,7 +155,18 @@ class TransactionController extends Controller
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
-        $transaction->delete();
+        DB::transaction(function() use ($transaction) {
+            $wallet = $transaction->wallet;
+            $amount = $transaction->amount;
+            $type = $transaction->category->type;
+
+            // Điều chỉnh số dư ví
+            if ($type === 'chi') $wallet->balance += $amount;
+            else $wallet->balance -= $amount;
+            $wallet->save();
+
+            $transaction->delete();
+        });
 
         return response()->json(['message' => 'Deleted successfully']);
     }

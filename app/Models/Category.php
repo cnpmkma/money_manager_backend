@@ -14,4 +14,9 @@ class Category extends Model
     public function transaction() {
         return $this->hasMany(Transaction::class);
     }
+
+    public function budgets()
+    {
+        return $this->hasMany(Budget::class);
+    }
 }
