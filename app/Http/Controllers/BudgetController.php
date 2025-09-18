@@ -7,10 +7,15 @@ use Illuminate\Http\Request;
 
 class BudgetController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        return Budget::with(['category', 'user'])->get();
+        $user = $request->user();
+
+        return Budget::with('category')
+                    ->where('user_id', $user->id)
+                    ->get();
     }
+
 
     public function store(Request $request)
     {

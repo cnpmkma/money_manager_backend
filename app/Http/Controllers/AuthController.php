@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\Budget;
+use App\Models\Category;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -22,6 +24,15 @@ class AuthController extends Controller
             'email'=> $request->email,
             'password'=> Hash::make($request->password),
         ]);
+
+        $defaultCategories = Category::where('type', 'chi')->get();
+        foreach ($defaultCategories as $category) {
+            Budget::create([
+                'user_id' => $user->id,
+                'category_id' => $category->id,
+                'max_amount' => 0, 
+            ]);
+        }
 
         return response()->json([
             'success' => true,

@@ -20,14 +20,18 @@ class DatabaseSeeder extends Seeder
         // User::factory(10)->create();
         $categories = [
             ['category_name' => 'Ăn uống', 'type' => 'chi'],
+            ['category_name' => 'Mua sắm', 'type' => 'chi'],
             ['category_name' => 'Gia đình', 'type' => 'chi'],
             ['category_name' => 'Giải trí', 'type' => 'chi'],
             ['category_name' => 'Giáo dục', 'type' => 'chi'],
             ['category_name' => 'Hóa đơn', 'type' => 'chi'],
             ['category_name' => 'Sức khỏe', 'type' => 'chi'],
+            ['category_name' => 'Quyên góp', 'type' => 'chi'],
+            ['category_name' => 'Khoản chi khác', 'type' => 'chi'],
             ['category_name' => 'Lương', 'type' => 'thu'],
             ['category_name' => 'Tiền thưởng', 'type' => 'thu'],
-            ['category_name' => 'Khác', 'type' => 'chi'],
+            ['category_name' => 'Tiền lãi', 'type' => 'thu'],
+            ['category_name' => 'Khoản thu khác', 'type' => 'thu'],
         ];
         
         foreach ($categories as $cat) {
@@ -45,7 +49,7 @@ class DatabaseSeeder extends Seeder
                 Budget::create([
                     'user_id' => $user->id,
                     'category_id' => $category->id,
-                    'max_amount' => rand(50, 500),
+                    'max_amount' => rand(0, 500000),
                 ]);
             }
         }
