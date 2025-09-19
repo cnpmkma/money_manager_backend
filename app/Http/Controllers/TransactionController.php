@@ -100,10 +100,12 @@ class TransactionController extends Controller
      */
     public function update(Request $request, Transaction $transaction)
     {
+        // Kiểm tra quyền
         if ($transaction->wallet->user_id !== $request->user()->id) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
+        // Validate request
         try {
             $validated = $request->validate([
                 'amount' => ['required', 'numeric'],
@@ -126,25 +128,41 @@ class TransactionController extends Controller
             $oldAmount = $transaction->amount;
             $oldType = $transaction->category->type;
 
-            // Điều chỉnh số dư ví cũ
-            if ($oldType === 'chi') $oldWallet->balance += $oldAmount;
-            else $oldWallet->balance -= $oldAmount;
-            $oldWallet->save();
-
             // Update transaction
             $transaction->update($validated);
 
-            $newType = $transaction->category->type;
             $newAmount = $transaction->amount;
+            $newType = $transaction->category->type;
 
-            // Điều chỉnh số dư ví mới
-            if ($newType === 'chi') $newWallet->balance -= $newAmount;
-            else $newWallet->balance += $newAmount;
-            $newWallet->save();
+            // --- Nếu cùng ví ---
+            if ($oldWallet->id === $newWallet->id) {
+                $delta = 0;
+
+                // Hoàn tác giao dịch cũ
+                $delta += ($oldType === 'chi') ? $oldAmount : -$oldAmount;
+
+                // Áp dụng giao dịch mới
+                $delta += ($newType === 'chi') ? -$newAmount : $newAmount;
+
+                $oldWallet->balance += $delta;
+                $oldWallet->save();
+            } else {
+                // --- Nếu khác ví ---
+                // Ví cũ: hoàn tác giao dịch cũ
+                if ($oldType === 'chi') $oldWallet->balance += $oldAmount;
+                else $oldWallet->balance -= $oldAmount;
+                $oldWallet->save();
+
+                // Ví mới: áp dụng giao dịch mới
+                if ($newType === 'chi') $newWallet->balance -= $newAmount;
+                else $newWallet->balance += $newAmount;
+                $newWallet->save();
+            }
         });
 
         return response()->json($transaction->load('category'));
     }
+
 
     /**
      * Remove the specified resource from storage.
